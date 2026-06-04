@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – Money Manager</title>
+  <meta name="description" content="Login to your Money Manager account to track your income and expenses.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    .auth-page { background: var(--bg-base); position: relative; }
+    .auth-bg {
+      position: fixed; inset: 0; z-index: 0; overflow: hidden;
+    }
+    .auth-bg::before {
+      content: '';
+      position: absolute;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%);
+      top: -200px; left: 50%; transform: translateX(-50%);
+    }
+    .auth-page .auth-card { position: relative; z-index: 1; }
+  </style>
+</head>
+<body>
+  <div class="auth-bg"></div>
+
+  <main class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-icon">💰</div>
+        <span class="auth-logo-text">Money Manager</span>
+      </div>
+
+      <h1 class="auth-title">Welcome back</h1>
+      <p class="auth-subtitle">Sign in to manage your finances</p>
+
+      <div id="error-msg" class="error-msg hidden">
+        <i class="ri-error-warning-line"></i>
+        <span id="error-text"></span>
+      </div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="name">User Name</label>
+          <input
+            type="text" id="name" class="form-control"
+            placeholder="Ex.John Doe" required autocomplete="username"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input
+            type="password" id="password" class="form-control"
+            placeholder="••••••••" required autocomplete="current-password"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full mt-4" id="login-btn" style="justify-content:center;">
+          <i class="ri-login-circle-line"></i>
+          <span>Sign In</span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Don't have an account? <a href="/register.html">Create one</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // Redirect if already logged in
+    if (Auth.isLoggedIn()) window.location.href = '/dashboard.html';
+
+    const form = document.getElementById('login-form');
+    const btn  = document.getElementById('login-btn');
+    const errEl = document.getElementById('error-msg');
+    const errText = document.getElementById('error-text');
+
+    function showError(msg) {
+      errText.textContent = msg;
+      errEl.classList.remove('hidden');
+    }
+    function hideError() { errEl.classList.add('hidden'); }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+      const name = document.getElementById('name').value.trim();
+      const password = document.getElementById('password').value;
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="ri-loader-4-line" style="animation:spin .7s linear infinite"></i> Signing in…';
+
+      try {
+        const data = await AuthAPI.login({ name, password });
+        Auth.setSession(data.token, data.user);
+        window.location.href = '/dashboard.html';
+      } catch (err) {
+        showError(err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-login-circle-line"></i> Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

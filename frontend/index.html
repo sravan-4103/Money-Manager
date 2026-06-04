@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transactions – Money Manager</title>
+  <meta name="description" content="Add, edit, and delete your income and expense transactions.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    .main-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+    .add-form-card { position: sticky; top: calc(var(--nav-height) + 20px); }
+
+    .list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .list-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .tx-count-badge {
+      background: var(--bg-card); border: 1px solid var(--glass-border);
+      padding: 3px 12px; border-radius: 99px;
+      font-size: 0.78rem; color: var(--text-muted);
+    }
+
+    .filter-select {
+      padding: 7px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary); font-size: 0.82rem;
+      cursor: pointer; outline: none;
+    }
+    .filter-select:focus { border-color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="container">
+
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <h1 class="page-title">Transactions</h1>
+          <p class="page-subtitle">Add and manage all your income & expenses</p>
+        </div>
+        <div class="filter-tabs" id="filter-tabs">
+          <button class="filter-tab" data-filter="">All Time</button>
+          <button class="filter-tab" data-filter="week">This Week</button>
+          <button class="filter-tab active" data-filter="month">This Month</button>
+          <button class="filter-tab" data-filter="year">This Year</button>
+        </div>
+      </div>
+
+      <div class="main-grid">
+
+        <!-- ── Add Transaction Form ─────────────────────────────── -->
+        <div class="card add-form-card">
+          <div class="card-body">
+            <h2 style="font-size:1rem;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px;">
+              <i class="ri-add-circle-line" style="color:var(--primary-light)"></i>
+              Add Transaction
+            </h2>
+
+            <div class="type-toggle" id="type-toggle">
+              <button class="type-toggle-btn expense active" data-type="expense" id="btn-expense">
+                <i class="ri-arrow-up-circle-line"></i> Expense
+              </button>
+              <button class="type-toggle-btn income" data-type="income" id="btn-income">
+                <i class="ri-arrow-down-circle-line"></i> Income
+              </button>
+            </div>
+
+            <form id="add-form" novalidate style="margin-top:18px">
+              <div class="form-group">
+                <label class="form-label" for="desc">Description</label>
+                <input type="text" id="desc" class="form-control" placeholder="e.g. Dinner at restaurant" required maxlength="100">
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="margin-bottom:0">
+                  <label class="form-label" for="amount">Amount (₹)</label>
+                  <div class="input-group">
+                    <span class="input-prefix">₹</span>
+                    <input type="number" id="amount" class="form-control" placeholder="0" required min="1" step="0.01">
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                  <label class="form-label" for="date">Date</label>
+                  <input type="date" id="date" class="form-control" required>
+                </div>
+              </div>
+
+              <div class="form-group mt-4">
+                <label class="form-label" for="category">Category</label>
+                <select id="category" class="form-control" required>
+                  <option value="">Select category…</option>
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-full mt-2" id="add-btn" style="justify-content:center;margin-top:12px">
+                <i class="ri-add-line"></i> Add Transaction
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- ── Transaction List ───────────────────────────────────── -->
+        <div>
+          <div class="list-header">
+            <div class="list-controls">
+              <span class="tx-count-badge" id="tx-count">0 transactions</span>
+              <select class="filter-select" id="type-filter">
+                <option value="">All Types</option>
+                <option value="income">Income Only</option>
+                <option value="expense">Expense Only</option>
+              </select>
+              <select class="filter-select" id="cat-filter">
+                <option value="">All Categories</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="tx-list">
+            <div class="spinner"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Edit Modal ──────────────────────────────────────────────── -->
+  <div class="modal-overlay hidden" id="edit-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title"><i class="ri-edit-line" style="color:var(--primary-light)"></i> Edit Transaction</span>
+        <button class="modal-close" id="modal-close"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+
+        <div class="type-toggle" id="edit-type-toggle">
+          <button class="type-toggle-btn expense" data-type="expense">
+            <i class="ri-arrow-up-circle-line"></i> Expense
+          </button>
+          <button class="type-toggle-btn income" data-type="income">
+            <i class="ri-arrow-down-circle-line"></i> Income
+          </button>
+        </div>
+
+        <form id="edit-form" novalidate style="margin-top:16px">
+          <input type="hidden" id="edit-id">
+          <div class="form-group">
+            <label class="form-label" for="edit-desc">Description</label>
+            <input type="text" id="edit-desc" class="form-control" required maxlength="100">
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label" for="edit-amount">Amount (₹)</label>
+              <div class="input-group">
+                <span class="input-prefix">₹</span>
+                <input type="number" id="edit-amount" class="form-control" required min="1">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label" for="edit-date">Date</label>
+              <input type="date" id="edit-date" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group mt-4">
+            <label class="form-label" for="edit-category">Category</label>
+            <select id="edit-category" class="form-control" required>
+              <option value="">Select category…</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button type="button" class="btn btn-ghost" id="cancel-edit" style="flex:1;justify-content:center">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="save-edit-btn" style="flex:2;justify-content:center">
+              <i class="ri-save-line"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if (!Auth.requireAuth()) throw new Error('not logged in');
+    renderNav('transactions');
+
+    // Set default date to today
+    document.getElementById('date').valueAsDate = new Date();
+
+    let currentFilter = 'month';
+    let currentType = 'expense';
+    let editType = 'expense';
+    let allTransactions = [];
+
+    // ── Filter tabs ──────────────────────────────────────────────
+    document.querySelectorAll('#filter-tabs .filter-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#filter-tabs .filter-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        loadTransactions();
+      });
+    });
+
+    // ── Type toggle (add form) ────────────────────────────────────
+    document.querySelectorAll('#type-toggle .type-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentType = btn.dataset.type;
+        document.querySelectorAll('#type-toggle .type-toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateCategoryDropdown('category', currentType);
+      });
+    });
+
+    // ── Type toggle (edit modal) ──────────────────────────────────
+    document.querySelectorAll('#edit-type-toggle .type-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        editType = btn.dataset.type;
+        document.querySelectorAll('#edit-type-toggle .type-toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateCategoryDropdown('edit-category', editType);
+      });
+    });
+
+    function updateCategoryDropdown(selectId, type) {
+      const sel = document.getElementById(selectId);
+      const cats = getCategoriesForType(type);
+      const current = sel.value;
+      sel.innerHTML = '<option value="">Select category…</option>' +
+        cats.map(c => `<option value="${c}" ${c === current ? 'selected' : ''}>${c}</option>`).join('');
+    }
+
+    // Initialize dropdowns
+    updateCategoryDropdown('category', 'expense');
+
+    // ── Category filter dropdown ──────────────────────────────────
+    function populateCatFilter() {
+      const all = [...INCOME_CATEGORIES, ...EXPENSE_CATEGORIES];
+      const sel = document.getElementById('cat-filter');
+      const curr = sel.value;
+      sel.innerHTML = '<option value="">All Categories</option>' +
+        all.map(c => `<option value="${c}" ${c === curr ? 'selected' : ''}>${c}</option>`).join('');
+    }
+    populateCatFilter();
+
+    document.getElementById('type-filter').addEventListener('change', renderList);
+    document.getElementById('cat-filter').addEventListener('change', renderList);
+
+    // ── Load transactions ─────────────────────────────────────────
+    async function loadTransactions() {
+      const listEl = document.getElementById('tx-list');
+      listEl.innerHTML = '<div class="spinner"></div>';
+      try {
+        const params = { limit: 200 };
+        if (currentFilter) params.filter = currentFilter;
+        const { transactions } = await TransactionAPI.getAll(params);
+        allTransactions = transactions;
+        renderList();
+      } catch (err) {
+        listEl.innerHTML = `<p class="text-muted text-center" style="padding:40px">Failed to load transactions. ${err.message}</p>`;
+      }
+    }
+
+    function renderList() {
+      const listEl = document.getElementById('tx-list');
+      const typeF = document.getElementById('type-filter').value;
+      const catF  = document.getElementById('cat-filter').value;
+
+      let filtered = allTransactions;
+      if (typeF) filtered = filtered.filter(t => t.type === typeF);
+      if (catF)  filtered = filtered.filter(t => t.category === catF);
+
+      document.getElementById('tx-count').textContent = `${filtered.length} transaction${filtered.length !== 1 ? 's' : ''}`;
+
+      if (!filtered.length) {
+        listEl.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon"><i class="ri-receipt-line"></i></div>
+            <div class="empty-title">No transactions found</div>
+            <div class="empty-text">Try a different filter or add a new transaction</div>
+          </div>`;
+        return;
+      }
+
+      listEl.innerHTML = `<div class="transaction-list">${
+        filtered.map(tx => `
+          <div class="transaction-item" id="tx-${tx._id}">
+            <div class="tx-icon ${tx.type}">
+              <i class="${getCategoryIcon(tx.category)}"></i>
+            </div>
+            <div class="tx-info">
+              <div class="tx-desc">${tx.description}</div>
+              <div class="tx-meta">
+                <span class="tx-category">${tx.category}</span>
+                <span class="tx-date">${formatDate(tx.date)}</span>
+                <span class="badge badge-${tx.type}">${tx.type}</span>
+              </div>
+            </div>
+            <div class="tx-amount ${tx.type}">
+              ${tx.type === 'income' ? '+' : '-'}${formatINR(tx.amount)}
+            </div>
+            <div class="tx-actions">
+              <button class="btn-icon edit" title="Edit" onclick="openEdit('${tx._id}')"><i class="ri-edit-line"></i></button>
+              <button class="btn-icon delete" title="Delete" onclick="deleteTransaction('${tx._id}', '${tx.description.replace(/'/g, "\\'")}')"><i class="ri-delete-bin-line"></i></button>
+            </div>
+          </div>
+        `).join('')
+      }</div>`;
+    }
+
+    // ── Add Transaction ───────────────────────────────────────────
+    document.getElementById('add-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('add-btn');
+      const desc     = document.getElementById('desc').value.trim();
+      const amount   = document.getElementById('amount').value;
+      const date     = document.getElementById('date').value;
+      const category = document.getElementById('category').value;
+
+      if (!desc || !amount || !date || !category) { Toast.error('Please fill all fields'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="ri-loader-4-line" style="animation:spin .7s linear infinite"></i> Adding…';
+
+      try {
+        await TransactionAPI.create({ description: desc, amount, type: currentType, category, date });
+        Toast.success('Transaction added!');
+        document.getElementById('add-form').reset();
+        document.getElementById('date').valueAsDate = new Date();
+        updateCategoryDropdown('category', currentType);
+        loadTransactions();
+      } catch (err) {
+        Toast.error(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-add-line"></i> Add Transaction';
+      }
+    });
+
+    // ── Edit Modal ────────────────────────────────────────────────
+    function openEdit(id) {
+      const tx = allTransactions.find(t => t._id === id);
+      if (!tx) return;
+
+      editType = tx.type;
+      document.getElementById('edit-id').value = id;
+      document.getElementById('edit-desc').value = tx.description;
+      document.getElementById('edit-amount').value = tx.amount;
+      document.getElementById('edit-date').value = new Date(tx.date).toISOString().split('T')[0];
+
+      document.querySelectorAll('#edit-type-toggle .type-toggle-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.type === tx.type);
+      });
+
+      updateCategoryDropdown('edit-category', tx.type);
+      document.getElementById('edit-category').value = tx.category;
+
+      document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    document.getElementById('modal-close').addEventListener('click',  () => document.getElementById('edit-modal').classList.add('hidden'));
+    document.getElementById('cancel-edit').addEventListener('click',  () => document.getElementById('edit-modal').classList.add('hidden'));
+    document.getElementById('edit-modal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) e.currentTarget.classList.add('hidden');
+    });
+
+    document.getElementById('edit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('save-edit-btn');
+      const id       = document.getElementById('edit-id').value;
+      const desc     = document.getElementById('edit-desc').value.trim();
+      const amount   = document.getElementById('edit-amount').value;
+      const date     = document.getElementById('edit-date').value;
+      const category = document.getElementById('edit-category').value;
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="ri-loader-4-line" style="animation:spin .7s linear infinite"></i> Saving…';
+
+      try {
+        await TransactionAPI.update(id, { description: desc, amount, type: editType, category, date });
+        Toast.success('Transaction updated!');
+        document.getElementById('edit-modal').classList.add('hidden');
+        loadTransactions();
+      } catch (err) {
+        Toast.error(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-save-line"></i> Save Changes';
+      }
+    });
+
+    // ── Delete Transaction ────────────────────────────────────────
+    async function deleteTransaction(id, desc) {
+      if (!confirm(`Delete "${desc}"? This cannot be undone.`)) return;
+      try {
+        await TransactionAPI.delete(id);
+        Toast.success('Transaction deleted');
+        loadTransactions();
+      } catch (err) {
+        Toast.error(err.message);
+      }
+    }
+
+    // Initial load
+    loadTransactions();
+  </script>
+</body>
+</html>

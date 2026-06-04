@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register – Money Manager</title>
+  <meta name="description" content="Create your Money Manager account to start tracking income and expenses.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    .auth-bg {
+      position: fixed; inset: 0; z-index: 0; overflow: hidden;
+    }
+    .auth-bg::before {
+      content: '';
+      position: absolute;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%);
+      top: -200px; left: 50%; transform: translateX(-50%);
+    }
+    .auth-page .auth-card { position: relative; z-index: 1; }
+
+    .password-strength {
+      display: flex; gap: 4px; margin-top: 6px;
+    }
+    .strength-bar {
+      height: 3px; flex: 1; border-radius: 99px;
+      background: var(--bg-elevated);
+      transition: background 0.3s;
+    }
+    .strength-bar.active-weak   { background: var(--expense); }
+    .strength-bar.active-fair   { background: var(--balance); }
+    .strength-bar.active-strong { background: var(--income); }
+    .strength-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="auth-bg"></div>
+
+  <main class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-icon">💰</div>
+        <span class="auth-logo-text">Money Manager</span>
+      </div>
+
+      <h1 class="auth-title">Create account</h1>
+      <p class="auth-subtitle">Start managing your money today</p>
+
+      <div id="error-msg" class="error-msg hidden">
+        <i class="ri-error-warning-line"></i>
+        <span id="error-text"></span>
+      </div>
+
+      <form id="register-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="name">Full Name</label>
+          <input
+            type="text" id="name" class="form-control"
+            placeholder="Sravan Kumar" required autocomplete="name"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input
+            type="email" id="email" class="form-control"
+            placeholder="you@example.com" required autocomplete="email"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input
+            type="password" id="password" class="form-control"
+            placeholder="Min. 6 characters" required autocomplete="new-password"
+          >
+          <div class="password-strength">
+            <div class="strength-bar" id="sb1"></div>
+            <div class="strength-bar" id="sb2"></div>
+            <div class="strength-bar" id="sb3"></div>
+            <div class="strength-bar" id="sb4"></div>
+          </div>
+          <div class="strength-label" id="strength-label"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="confirm-password">Confirm Password</label>
+          <input
+            type="password" id="confirm-password" class="form-control"
+            placeholder="••••••••" required autocomplete="new-password"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full mt-4" id="register-btn" style="justify-content:center;">
+          <i class="ri-user-add-line"></i>
+          <span>Create Account</span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="/login.html">Sign in</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    if (Auth.isLoggedIn()) window.location.href = '/dashboard.html';
+
+    const form = document.getElementById('register-form');
+    const btn  = document.getElementById('register-btn');
+    const errEl = document.getElementById('error-msg');
+    const errText = document.getElementById('error-text');
+    const pwdInput = document.getElementById('password');
+    const bars = [document.getElementById('sb1'), document.getElementById('sb2'),
+                  document.getElementById('sb3'), document.getElementById('sb4')];
+    const strengthLabel = document.getElementById('strength-label');
+
+    function showError(msg) { errText.textContent = msg; errEl.classList.remove('hidden'); }
+    function hideError()    { errEl.classList.add('hidden'); }
+
+    pwdInput.addEventListener('input', () => {
+      const v = pwdInput.value;
+      let score = 0;
+      if (v.length >= 6) score++;
+      if (v.length >= 10) score++;
+      if (/[A-Z]/.test(v) && /[0-9]/.test(v)) score++;
+      if (/[^A-Za-z0-9]/.test(v)) score++;
+
+      const labels = ['', 'Weak', 'Fair', 'Strong', 'Very Strong'];
+      const cls    = ['', 'active-weak', 'active-fair', 'active-strong', 'active-strong'];
+      bars.forEach((b, i) => { b.className = 'strength-bar' + (i < score ? ' ' + cls[score] : ''); });
+      strengthLabel.textContent = score > 0 ? labels[score] : '';
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm-password').value;
+
+      if (password !== confirm) { showError('Passwords do not match'); return; }
+      if (password.length < 6)  { showError('Password must be at least 6 characters'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="ri-loader-4-line" style="animation:spin .7s linear infinite"></i> Creating account…';
+
+      try {
+        const data = await AuthAPI.register({ name, email, password });
+        Auth.setSession(data.token, data.user);
+        window.location.href = '/dashboard.html';
+      } catch (err) {
+        showError(err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-user-add-line"></i> Create Account';
+      }
+    });
+  </script>
+</body>
+</html>

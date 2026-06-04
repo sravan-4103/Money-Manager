@@ -1,0 +1,13 @@
+{
+  "name": "money-manager",
+  "version": "1.0.0",
+  "description": "Full-stack Money Manager with CRUD, Auth, and Charts",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "cd backend && npm run dev"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

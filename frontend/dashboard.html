@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Money Manager</title>
+  <meta name="description" content="View your financial overview – balance, income, expenses and recent transactions.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    .header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+    .recent-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .recent-title { font-size: 1rem; font-weight: 700; }
+    .view-all { font-size: 0.82rem; color: var(--primary-light); font-weight: 500; }
+    .view-all:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="container">
+
+      <!-- Header Row -->
+      <div class="header-row">
+        <div class="page-header" style="margin-bottom:0">
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-subtitle" id="greeting">Good morning! Here's your financial overview.</p>
+        </div>
+        <div class="filter-tabs" id="filter-tabs">
+          <button class="filter-tab" data-filter="week">This Week</button>
+          <button class="filter-tab active" data-filter="month">This Month</button>
+          <button class="filter-tab" data-filter="year">This Year</button>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card balance">
+          <div class="stat-icon"><i class="ri-wallet-3-line"></i></div>
+          <div class="stat-label">Net Balance</div>
+          <div class="stat-value" id="stat-balance">—</div>
+          <div class="stat-meta" id="stat-tx-count">Loading…</div>
+        </div>
+        <div class="stat-card income">
+          <div class="stat-icon"><i class="ri-arrow-down-circle-line"></i></div>
+          <div class="stat-label">Total Income</div>
+          <div class="stat-value" id="stat-income">—</div>
+          <div class="stat-meta" id="stat-income-count">—</div>
+        </div>
+        <div class="stat-card expense">
+          <div class="stat-icon"><i class="ri-arrow-up-circle-line"></i></div>
+          <div class="stat-label">Total Expenses</div>
+          <div class="stat-value" id="stat-expense">—</div>
+          <div class="stat-meta" id="stat-expense-count">—</div>
+        </div>
+        <div class="stat-card primary">
+          <div class="stat-icon"><i class="ri-percent-line"></i></div>
+          <div class="stat-label">Savings Rate</div>
+          <div class="stat-value" id="stat-savings">—</div>
+          <div class="stat-meta" id="stat-savings-text">—</div>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="card">
+        <div class="card-body">
+          <div class="recent-header">
+            <span class="recent-title">Recent Transactions</span>
+            <a href="/index.html" class="view-all">View All <i class="ri-arrow-right-line"></i></a>
+          </div>
+          <div id="recent-list">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if (!Auth.requireAuth()) throw new Error('not logged in');
+    renderNav('dashboard');
+
+    // Greeting
+    const hour = new Date().getHours();
+    const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    const user = Auth.getUser();
+    document.getElementById('greeting').textContent = `${greet}, ${user?.name?.split(' ')[0]}! Here's your financial overview.`;
+
+    let currentFilter = 'month';
+
+    // Filter tabs
+    document.querySelectorAll('.filter-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        loadData();
+      });
+    });
+
+    async function loadData() {
+      loadSummary();
+      loadRecent();
+    }
+
+    async function loadSummary() {
+      try {
+        const s = await TransactionAPI.getSummary(currentFilter);
+        document.getElementById('stat-balance').textContent = formatINR(s.balance);
+        document.getElementById('stat-income').textContent  = formatINR(s.income);
+        document.getElementById('stat-expense').textContent = formatINR(s.expense);
+        document.getElementById('stat-tx-count').textContent   = `${s.totalCount} transaction${s.totalCount !== 1 ? 's' : ''}`;
+        document.getElementById('stat-income-count').textContent  = `${s.incomeCount} transaction${s.incomeCount !== 1 ? 's' : ''}`;
+        document.getElementById('stat-expense-count').textContent = `${s.expenseCount} transaction${s.expenseCount !== 1 ? 's' : ''}`;
+
+        const savingsRate = s.income > 0 ? Math.round(((s.income - s.expense) / s.income) * 100) : 0;
+        document.getElementById('stat-savings').textContent = `${Math.max(0, savingsRate)}%`;
+        document.getElementById('stat-savings-text').textContent = savingsRate >= 0
+          ? `Saved ${formatINR(Math.max(0, s.balance))} of income`
+          : 'Expenses exceed income';
+      } catch (err) {
+        Toast.error('Failed to load summary');
+      }
+    }
+
+    async function loadRecent() {
+      const listEl = document.getElementById('recent-list');
+      listEl.innerHTML = '<div class="spinner"></div>';
+      try {
+        const { transactions } = await TransactionAPI.getAll({ filter: currentFilter, limit: 8 });
+        if (!transactions.length) {
+          listEl.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon"><i class="ri-receipt-line"></i></div>
+              <div class="empty-title">No transactions yet</div>
+              <div class="empty-text">Add one from the Transactions page</div>
+            </div>`;
+          return;
+        }
+        listEl.innerHTML = transactions.map(tx => `
+          <div class="transaction-item">
+            <div class="tx-icon ${tx.type}">
+              <i class="${getCategoryIcon(tx.category)}"></i>
+            </div>
+            <div class="tx-info">
+              <div class="tx-desc">${tx.description}</div>
+              <div class="tx-meta">
+                <span class="tx-category">${tx.category}</span>
+                <span class="tx-date">${formatDate(tx.date)}</span>
+              </div>
+            </div>
+            <div class="tx-amount ${tx.type}">
+              ${tx.type === 'income' ? '+' : '-'}${formatINR(tx.amount)}
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        listEl.innerHTML = `<p class="text-muted text-center" style="padding:24px">Failed to load transactions</p>`;
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>

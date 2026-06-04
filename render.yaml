@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: money-manager
+    runtime: node
+    region: singapore   # closest to India
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false      # you'll paste this in Render dashboard
+      - key: JWT_SECRET
+        sync: false      # you'll paste this in Render dashboard
