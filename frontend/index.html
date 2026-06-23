@@ -252,7 +252,7 @@
 
     // ── Category filter dropdown ──────────────────────────────────
     function populateCatFilter() {
-      const all  = [...INCOME_CATEGORIES, ...EXPENSE_CATEGORIES, ...REFUND_CATEGORIES];
+      const all  = [...new Set([...INCOME_CATEGORIES, ...EXPENSE_CATEGORIES, ...REFUND_CATEGORIES])];
       const sel  = document.getElementById('cat-filter');
       const curr = sel.value;
       sel.innerHTML = '<option value="">All Categories</option>' +
