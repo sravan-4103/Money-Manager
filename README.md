@@ -25,7 +25,7 @@ Follow these instructions to run the project locally on your machine.
 
 ### 1. Clone the repository
 ```bash
-git clone <your-github-repo-url>
+git clone https://github.com/sravan-4103/Money-Manager
 cd money-manager
 
 ### 2. Install Dependencies
