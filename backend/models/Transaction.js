@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Business', 'Investment', 'Gift', 'Other Income'];
+const INCOME_CATEGORIES = ['Salary', 'Stock', 'Freelance', 'Business', 'Investment', 'Gift', 'Other Income'];
 const EXPENSE_CATEGORIES = ['Food & Dining', 'Transport', 'Shopping', 'Entertainment', 'Rent', 'Health', 'Education', 'Utilities', 'Travel', 'Other'];
 
 const transactionSchema = new mongoose.Schema({
