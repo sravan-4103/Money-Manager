@@ -1,6 +1,5 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const User = require('../models/User');
 const { sendOTP } = require('../mailer');
 const rateLimit = require('express-rate-limit');
@@ -21,7 +20,8 @@ function generateOTP() {
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 3, // Limits each IP to 3 requests per windowMs
-  message: { message: 'Too many requests from this IP, please try again after 15 minutes' }
+  message: { message: 'Too many requests from this IP, please try again after 15 minutes' },
+  skipFailedRequests: true
 });
 
 // ───────────── POST /api/auth/register ─────────────────────────
@@ -148,8 +148,14 @@ router.post('/resend-otp',authLimiter, async (req, res) => {
   }
 });
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 8,
+  message: { message: 'Too many login attempts, please try again after 15 minutes' }
+});
+
 // ───────────── POST /api/auth/login ─────────────────────────────
-router.post('/login', async (req, res) => {
+router.post('/login',loginLimiter , async (req, res) => {
   console.log('📥 Login attempt for name:', req.body?.name);
   try {
     const { name, password } = req.body;
