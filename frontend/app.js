@@ -2,7 +2,7 @@
    app.js  –  Shared utilities: Auth, API, Toast, Nav
    ───────────────────────────────────────────────────────────── */
 
-// Use relative URL — works since Express serves both API and frontend
+// Using relative URL — works since Express serves both API and frontend
 const API = '/api';
 
 // ── Auth helpers ──────────────────────────────────────────────────

@@ -437,6 +437,7 @@ select.form-control option { background: var(--bg-elevated); color: var(--text-p
 .type-toggle-btn.income.active  { background: var(--income-bg);  color: var(--income);  border: 1px solid var(--income-border);  }
 .type-toggle-btn.expense.active { background: var(--expense-bg); color: var(--expense); border: 1px solid var(--expense-border); }
 .type-toggle-btn.refund.active  { background: var(--refund-bg);  color: var(--refund);  border: 1px solid var(--refund-border); }
+
 /* ── Transaction List ──────────────────────────────────────────── */
 .transaction-list { display: flex; flex-direction: column; gap: 8px; }
 .transaction-item {
