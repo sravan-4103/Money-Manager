@@ -21,11 +21,23 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password is required'],
     minlength: [6, 'Password must be at least 6 characters']
+  },
+  // ── Email verification ────────────────────────────────────
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  otp: {
+    type: String,
+    default: null
+  },
+  otpExpiry: {
+    type: Date,
+    default: null
   }
 }, { timestamps: true });
 
 // Hash password before saving
-// NOTE: In Mongoose 7+, async pre hooks must NOT call next() — return early instead
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 12);

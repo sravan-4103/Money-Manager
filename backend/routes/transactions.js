@@ -69,19 +69,22 @@ router.get('/summary', auth, async (req, res) => {
       }
     ]);
 
-    let income = 0, expense = 0, incomeCount = 0, expenseCount = 0;
+    let income = 0, expense = 0,refund = 0, incomeCount = 0, expenseCount = 0,refundCount= 0;
     result.forEach(r => {
       if (r._id === 'income') { income = r.total; incomeCount = r.count; }
       if (r._id === 'expense') { expense = r.total; expenseCount = r.count; }
+      if (r._id === 'refund') { refund = r.total; refundCount = r.count; }
     });
 
     res.json({
       income,
       expense,
-      balance: income - expense,
+      refund,
+      balance: income + refund - expense,
       incomeCount,
       expenseCount,
-      totalCount: incomeCount + expenseCount
+      refundCount,
+      totalCount: incomeCount + expenseCount + refundCount
     });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
@@ -171,8 +174,8 @@ router.post('/', auth, async (req, res) => {
     if (!description || !amount || !type || !category) {
       return res.status(400).json({ message: 'All fields are required' });
     }
-    if (!['income', 'expense'].includes(type)) {
-      return res.status(400).json({ message: 'Type must be income or expense' });
+    if (!['income', 'expense','refund'].includes(type)) {
+      return res.status(400).json({ message: 'Type must be income, expense or refund' });
     }
 
     const transaction = new Transaction({

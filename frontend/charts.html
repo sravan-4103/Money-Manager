@@ -190,6 +190,10 @@
           const f = raw.find(r => r._id.year === m.year && r._id.month === m.month && r._id.type === 'expense');
           return f ? f.total : 0;
         });
+        const refunds = months.map(m => {
+          const f = raw.find(r => r._id.year === m.year && r._id.month === m.month && r._id.type === 'refund');
+          return f ? f.total : 0;
+        });
 
         if (!wrap.querySelector('canvas')) {
           wrap.innerHTML = '<canvas id="bar-chart"></canvas>';
@@ -215,6 +219,15 @@
                 data: expenses,
                 backgroundColor: 'rgba(244,63,94,0.7)',
                 borderColor: '#f43f5e',
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false
+              },
+              {
+                label: 'Refund',
+                data: refunds,
+                backgroundColor: 'rgba(14, 165, 233, 0.7)',
+                borderColor: '#0ea5e9',
                 borderWidth: 2,
                 borderRadius: 6,
                 borderSkipped: false
@@ -265,7 +278,8 @@
         const balances = months.map(m => {
           const inc = raw.find(r => r._id.year === m.year && r._id.month === m.month && r._id.type === 'income');
           const exp = raw.find(r => r._id.year === m.year && r._id.month === m.month && r._id.type === 'expense');
-          cumulative += (inc ? inc.total : 0) - (exp ? exp.total : 0);
+          const ref = raw.find(r => r._id.year === m.year && r._id.month === m.month && r._id.type === 'refund');
+          cumulative += (inc ? inc.total : 0) + (ref ?ref.total : 0) - (exp ? exp.total : 0);
           return cumulative;
         });
 

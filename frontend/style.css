@@ -28,6 +28,9 @@
   --expense:       #f43f5e;
   --expense-bg:    rgba(244, 63, 94, 0.12);
   --expense-border:rgba(244, 63, 94, 0.25);
+  --refund:        #0ea5e9;
+  --refund-bg:     rgba(14, 165, 233, 0.12);
+  --refund-border: rgba(14, 165, 233, 0.25);
   --balance:       #f59e0b;
   --balance-bg:    rgba(245, 158, 11, 0.12);
   --balance-border:rgba(245, 158, 11, 0.25);
@@ -292,6 +295,7 @@ img { display: block; max-width: 100%; }
 
 .stat-card.income  { background: var(--income-bg);  border-color: var(--income-border);  --grad-bg: linear-gradient(135deg, #10b981, #059669); }
 .stat-card.expense { background: var(--expense-bg); border-color: var(--expense-border); --grad-bg: linear-gradient(135deg, #f43f5e, #e11d48); }
+.stat-card.refund  { background: var(--refund-b);   border-color: var(--refund-border);  --grad-bg: linear-gradient(135deg, #0ea5e9, #0284c7); }
 .stat-card.balance { background: var(--balance-bg); border-color: var(--balance-border); --grad-bg: linear-gradient(135deg, #f59e0b, #d97706); }
 .stat-card.primary { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.25); --grad-bg: var(--grad-primary); }
 
@@ -302,6 +306,7 @@ img { display: block; max-width: 100%; }
 }
 .stat-card.income  .stat-icon { background: rgba(16,185,129,0.2);  color: var(--income); }
 .stat-card.expense .stat-icon { background: rgba(244,63,94,0.2);   color: var(--expense); }
+.stat-card.refund .stat-icon  { background: rgba(14,165,233,0.2);  color: var(--refund); }
 .stat-card.balance .stat-icon { background: rgba(245,158,11,0.2);  color: var(--balance); }
 .stat-card.primary .stat-icon { background: rgba(99,102,241,0.2);  color: var(--primary-light); }
 
@@ -309,6 +314,7 @@ img { display: block; max-width: 100%; }
 .stat-value { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.03em; margin-top: 4px; }
 .stat-card.income  .stat-value { color: var(--income); }
 .stat-card.expense .stat-value { color: var(--expense); }
+.stat-card.refund .stat-value  { color: var(--refund); }
 .stat-card.balance .stat-value { color: var(--balance); }
 .stat-card.primary .stat-value { color: var(--primary-light); }
 .stat-meta { font-size: 0.77rem; color: var(--text-muted); margin-top: 6px; }
@@ -430,7 +436,7 @@ select.form-control option { background: var(--bg-elevated); color: var(--text-p
 .type-toggle-btn:hover { color: var(--text-primary); background: var(--bg-card-hover); }
 .type-toggle-btn.income.active  { background: var(--income-bg);  color: var(--income);  border: 1px solid var(--income-border);  }
 .type-toggle-btn.expense.active { background: var(--expense-bg); color: var(--expense); border: 1px solid var(--expense-border); }
-
+.type-toggle-btn.refund.active  { background: var(--refund-bg);  color: var(--refund);  border: 1px solid var(--refund-border); }
 /* ── Transaction List ──────────────────────────────────────────── */
 .transaction-list { display: flex; flex-direction: column; gap: 8px; }
 .transaction-item {
@@ -455,6 +461,7 @@ select.form-control option { background: var(--bg-elevated); color: var(--text-p
 }
 .tx-icon.income  { background: var(--income-bg);  color: var(--income); }
 .tx-icon.expense { background: var(--expense-bg); color: var(--expense); }
+.tx-icon.refund  { background: var(--refund-bg);  color: var(--refund); }
 
 .tx-info { flex: 1; min-width: 0; }
 .tx-desc {
@@ -478,6 +485,7 @@ select.form-control option { background: var(--bg-elevated); color: var(--text-p
 }
 .tx-amount.income  { color: var(--income); }
 .tx-amount.expense { color: var(--expense); }
+.tx-amount.refund  { color: var(--refund); }
 
 .tx-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
@@ -489,6 +497,7 @@ select.form-control option { background: var(--bg-elevated); color: var(--text-p
 }
 .badge-income  { background: var(--income-bg);  color: var(--income);  border: 1px solid var(--income-border); }
 .badge-expense { background: var(--expense-bg); color: var(--expense); border: 1px solid var(--expense-border); }
+.badge-refund  { background: var(--refund-bg);  color: var(--refund);  border: 1px solid var(--refund-border); }
 
 /* ── Modal ─────────────────────────────────────────────────────── */
 .modal-overlay {

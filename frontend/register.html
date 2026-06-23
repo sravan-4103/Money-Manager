@@ -152,8 +152,8 @@
 
       try {
         const data = await AuthAPI.register({ name, email, password });
-        Auth.setSession(data.token, data.user);
-        window.location.href = '/dashboard.html';
+        // OTP sent — redirect to verification page
+        window.location.href = `/verify-otp.html?email=${encodeURIComponent(email)}`;
       } catch (err) {
         showError(err.message);
         btn.disabled = false;

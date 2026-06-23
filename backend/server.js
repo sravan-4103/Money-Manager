@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 });
 
 // ── API Routes ──────────────────────────────────────────────────────────────
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes); // If a request starts with 1st parameter, hand the request to authRoutes.
 app.use('/api/transactions', transactionRoutes);
 
 // ── Health check ────────────────────────────────────────────────────────────

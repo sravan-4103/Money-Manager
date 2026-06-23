@@ -54,6 +54,12 @@
           <div class="stat-value" id="stat-expense">—</div>
           <div class="stat-meta" id="stat-expense-count">—</div>
         </div>
+        <div class="stat-card refund">
+          <div class="stat-icon"><i class="ri-refund-2-line"></i></div>
+          <div class="stat-label">Total Refunds</div>
+          <div class="stat-value" id="stat-refund">—</div>
+          <div class="stat-meta" id="stat-refund-count">—</div>
+        </div>
         <div class="stat-card primary">
           <div class="stat-icon"><i class="ri-percent-line"></i></div>
           <div class="stat-label">Savings Rate</div>
@@ -112,11 +118,14 @@
         document.getElementById('stat-balance').textContent = formatINR(s.balance);
         document.getElementById('stat-income').textContent  = formatINR(s.income);
         document.getElementById('stat-expense').textContent = formatINR(s.expense);
+        document.getElementById('stat-refund').textContent = formatINR(s.refund || 0);
         document.getElementById('stat-tx-count').textContent   = `${s.totalCount} transaction${s.totalCount !== 1 ? 's' : ''}`;
         document.getElementById('stat-income-count').textContent  = `${s.incomeCount} transaction${s.incomeCount !== 1 ? 's' : ''}`;
         document.getElementById('stat-expense-count').textContent = `${s.expenseCount} transaction${s.expenseCount !== 1 ? 's' : ''}`;
+        document.getElementById('stat-refund-count').textContent = `${s.refundCount || 0} transaction${s.refundCount !== 1 ? 's' : ''}`;
 
-        const savingsRate = s.income > 0 ? Math.round(((s.income - s.expense) / s.income) * 100) : 0;
+        const totalPos = s.income + (s.refund || 0);
+        const savingsRate = totalPos > 0 ? Math.round(((totalPos - s.expense) / totalPos) * 100) : 0;
         document.getElementById('stat-savings').textContent = `${Math.max(0, savingsRate)}%`;
         document.getElementById('stat-savings-text').textContent = savingsRate >= 0
           ? `Saved ${formatINR(Math.max(0, s.balance))} of income`
@@ -153,7 +162,7 @@
               </div>
             </div>
             <div class="tx-amount ${tx.type}">
-              ${tx.type === 'income' ? '+' : '-'}${formatINR(tx.amount)}
+              ${tx.type === 'expense' ? '-' : '+'}${formatINR(tx.amount)}
             </div>
           </div>
         `).join('');

@@ -101,6 +101,11 @@
         Auth.setSession(data.token, data.user);
         window.location.href = '/dashboard.html';
       } catch (err) {
+        // If account exists but email not verified, redirect to OTP page
+        if (err.email) {
+          window.location.href = `/verify-otp.html?email=${encodeURIComponent(err.email)}`;
+          return;
+        }
         showError(err.message);
         btn.disabled = false;
         btn.innerHTML = '<i class="ri-login-circle-line"></i> Sign In';

@@ -44,7 +44,12 @@ async function apiFetch(path, options = {}) {
     Auth.logout();
     throw new Error('Session expired');
   }
-  if (!res.ok) throw new Error(data.message || 'Request failed');
+  if (!res.ok) {
+    const err = new Error(data.message || 'Request failed');
+    // Attach any extra fields from the response (e.g. email, needsVerification)
+    Object.assign(err, data);
+    throw err;
+  }
   return data;
 }
 
@@ -81,6 +86,12 @@ const AuthAPI = {
   },
   login(data) {
     return apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(data) });
+  },
+  verifyOtp(data) {
+    return apiFetch('/auth/verify-otp', { method: 'POST', body: JSON.stringify(data) });
+  },
+  resendOtp(data) {
+    return apiFetch('/auth/resend-otp', { method: 'POST', body: JSON.stringify(data) });
   }
 };
 
@@ -166,7 +177,9 @@ function formatDate(dateStr) {
 
 // ── Category icon map ─────────────────────────────────────────────
 const CATEGORY_ICONS = {
+  'Refund': 'ri-refund-2-line',
   'Salary': 'ri-briefcase-line',
+  'Stock': 'ri-stock-line',
   'Freelance': 'ri-macbook-line',
   'Business': 'ri-store-2-line',
   'Investment': 'ri-stock-line',
@@ -188,9 +201,10 @@ function getCategoryIcon(category) {
   return CATEGORY_ICONS[category] || 'ri-price-tag-3-line';
 }
 
-const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Business', 'Investment', 'Gift', 'Other Income'];
+const INCOME_CATEGORIES = ['Salary', 'Stock', 'Freelance', 'Business', 'Investment', 'Gift', 'Other Income'];
 const EXPENSE_CATEGORIES = ['Food & Dining', 'Transport', 'Shopping', 'Entertainment', 'Rent', 'Health', 'Education', 'Utilities', 'Travel', 'Other'];
+const REFUND_CATEGORIES = ['Transport', 'Shopping', 'Ticket Bookings', 'Utilities'];
 
 function getCategoriesForType(type) {
-  return type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  return type != 'refund' ? (type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES):REFUND_CATEGORIES;
 }
