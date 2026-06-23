@@ -4,8 +4,7 @@
   "description": "Money Manager Backend API",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -17,10 +16,6 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^9.6.2",
-    "nodemailer": "^8.0.10"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.7"
+    "mongoose": "^9.6.2"
   }
 }
